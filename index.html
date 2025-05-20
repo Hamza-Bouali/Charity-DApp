@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Charity DApp</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Charity Donation DApp</h1>
+
+  <button id="connectBtn">Connect Wallet</button>
+  <p id="walletAddress"></p>
+
+  <section>
+    <h2>Submit Charity Request</h2>
+    <input id="charityName" placeholder="Name" />
+    <input id="charityDesc" placeholder="Description" />
+    <input id="metadataUrl" placeholder="Metadata URL" />
+    <button onclick="submitCharityRequest()">Submit Request</button>
+    <p id="charityStatus"></p>
+  </section>
+
+  <section>
+  <h2>Donate to Campaign</h2>
+  <input id="charityAddress" placeholder="Charity Address" />
+  <input id="campaignId" type="number" placeholder="Campaign ID" />
+  <input id="donationAmount" type="number" placeholder="Amount in ETH" />
+  <input id="donationMessage" placeholder="Message" />
+  <button onclick="donate()">Donate</button>
+  <p id="donationStatus"></p>
+</section>
+  <section>
+  <h2>All Campaigns</h2>
+  <button id="loadCampaignsBtn" onclick="loadAllCampaigns()">Load Campaigns</button>
+  <div id="campaignsContainer"></div>
+</section>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

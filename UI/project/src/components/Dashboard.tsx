@@ -4,8 +4,15 @@ import { PieChart, BarChart2, Users, TrendingUp, Clock, DollarSign } from 'lucid
 import { formatEther } from '../utils/helpers';
 
 const Dashboard: React.FC = () => {
-  const { web3, contract, account } = useWallet();
-  const [stats, setStats] = useState({
+  const { web3, contract } = useWallet(); // Removed unused 'account' variable
+  const [stats, setStats] = useState<{
+    totalCampaigns: number;
+    totalDonations: string;
+    activeCampaigns: number;
+    totalDonors: number;
+    recentDonations: any[];
+    topCampaigns: { title: string; totalDonated: string; goalAmount: string; charity: string }[];
+  }>({
     totalCampaigns: 0,
     totalDonations: '0',
     activeCampaigns: 0,
@@ -27,7 +34,7 @@ const Dashboard: React.FC = () => {
       let activeCampaigns = 0;
       let totalDonations = BigInt(0);
       const donorSet = new Set();
-      const campaignStats = [];
+      const campaignStats: { title: string; totalDonated: string; goalAmount: string; charity: string }[] = [];
 
       for (const charity of charities) {
         const campaigns = await contract.methods.getCampaigns(charity).call();
@@ -37,20 +44,20 @@ const Dashboard: React.FC = () => {
           if (campaign.isActive) activeCampaigns++;
           totalDonations += BigInt(campaign.totalDonated);
           
-          const donations = await contract.methods.getDonationsToCampaign(charity, index).call();
-          donations.forEach(donation => donorSet.add(donation.donor));
+          const donations: { donor: string }[] = await contract.methods.getDonationsToCampaign(charity, index).call();
+          donations.forEach((donation) => donorSet.add(donation.donor));
           
           campaignStats.push({
             title: campaign.title,
-            totalDonated: campaign.totalDonated,
-            goalAmount: campaign.goalAmount,
+            totalDonated: campaign.totalDonated.toString(),
+            goalAmount: campaign.goalAmount.toString(),
             charity
           });
         }
       }
 
       const topCampaigns = campaignStats
-        .sort((a, b) => BigInt(b.totalDonated) - BigInt(a.totalDonated))
+        .sort((a, b) => Number(BigInt(b.totalDonated) - BigInt(a.totalDonated))) // Convert BigInt to number for sorting
         .slice(0, 5);
 
       setStats({

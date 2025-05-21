@@ -6,6 +6,8 @@ import CampaignList from './components/CampaignList';
 import CreateCampaign from './components/CreateCampaign';
 import DonateForm from './components/DonateForm';
 import Dashboard from './components/Dashboard';
+import RequestCharityRegistration from './components/RequestCharityRegistration';
+import ApproveCharityRequests from './components/ApproveCharityRequests';
 import { WalletProvider } from './context/WalletContext';
 import './App.css';
 
@@ -58,6 +60,18 @@ function App() {
                   <h2 className="text-2xl font-bold text-gray-900">Make a Donation</h2>
                 </div>
                 <DonateForm />
+              </section>
+            )}
+
+            {activeTab === 'requestCharity' && (
+              <section className="mt-8">
+                <RequestCharityRegistration />
+              </section>
+            )}
+
+            {activeTab === 'approveCharity' && (
+              <section className="mt-8">
+                <ApproveCharityRequests />
               </section>
             )}
           </div>

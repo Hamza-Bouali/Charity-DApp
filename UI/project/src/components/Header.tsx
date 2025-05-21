@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, LayoutDashboard } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 
 interface HeaderProps {
@@ -60,6 +60,26 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                   onClick={() => setActiveTab('donate')}
                 >
                   Donate
+                </button>
+                <button
+                  className={`px-3 py-2 font-medium rounded-md transition-colors ${
+                    activeTab === 'requestCharity'
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                  onClick={() => setActiveTab('requestCharity')}
+                >
+                  Request Charity
+                </button>
+                <button
+                  className={`px-3 py-2 font-medium rounded-md transition-colors ${
+                    activeTab === 'approveCharity'
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                  onClick={() => setActiveTab('approveCharity')}
+                >
+                  Approve Requests
                 </button>
               </>
             )}
@@ -138,6 +158,32 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
                 }}
               >
                 Donate
+              </button>
+              <button
+                className={`block w-full text-left px-3 py-2 font-medium rounded-md ${
+                  activeTab === 'requestCharity'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+                onClick={() => {
+                  setActiveTab('requestCharity');
+                  document.getElementById('mobile-menu')?.classList.add('hidden');
+                }}
+              >
+                Request Charity
+              </button>
+              <button
+                className={`block w-full text-left px-3 py-2 font-medium rounded-md ${
+                  activeTab === 'approveCharity'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+                onClick={() => {
+                  setActiveTab('approveCharity');
+                  document.getElementById('mobile-menu')?.classList.add('hidden');
+                }}
+              >
+                Approve Requests
               </button>
             </>
           )}

@@ -1,967 +1,974 @@
-const contractAddress = "0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8"; // replace with actual address
+let web3, contract, account;
+const contractAddress = "0xCfEB869F69431e42cdB54A4F4f105C19C080A601"; // Replace with deployed address
 const abi = [
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnableInvalidOwner",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "OwnableUnauthorizedAccount",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "title",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			}
-		],
-		"name": "CampaignCreated",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			}
-		],
-		"name": "CharityApproved",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "requester",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "uint256",
-				"name": "requestId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			}
-		],
-		"name": "CharityRequested",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "donor",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "message",
-				"type": "string"
-			}
-		],
-		"name": "DonationMade",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Paused",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Unpaused",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "Withdrawn",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "requestId",
-				"type": "uint256"
-			}
-		],
-		"name": "approveCharity",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "title",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "goalAmount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "durationInDays",
-				"type": "uint256"
-			}
-		],
-		"name": "createCampaign",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "message",
-				"type": "string"
-			}
-		],
-		"name": "donateToCampaign",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pauseContract",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "metadataUrl",
-				"type": "string"
-			}
-		],
-		"name": "requestCharityRegistration",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "setMinimumDonation",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			}
-		],
-		"name": "toggleCampaignStatus",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"internalType": "bool",
-				"name": "status",
-				"type": "bool"
-			}
-		],
-		"name": "toggleCharityStatus",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "unpauseContract",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "metadataUrl",
-				"type": "string"
-			}
-		],
-		"name": "updateCharityInfo",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			}
-		],
-		"name": "withdrawCampaignFunds",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "campaignsByCharity",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "title",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "goalAmount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "totalDonated",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bool",
-				"name": "isActive",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "charities",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "metadataUrl",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "isActive",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "charityList",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "charityRequests",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "requester",
-				"type": "address"
-			},
-			{
-				"internalType": "string",
-				"name": "name",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "description",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "metadataUrl",
-				"type": "string"
-			},
-			{
-				"internalType": "bool",
-				"name": "approved",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "donationsByDonor",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "donor",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "message",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "donationsToCampaign",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "donor",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			},
-			{
-				"internalType": "string",
-				"name": "message",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			}
-		],
-		"name": "getCampaigns",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "string",
-						"name": "title",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "description",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "goalAmount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "totalDonated",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "deadline",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isActive",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct CharityDonation.Campaign[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getCharities",
-		"outputs": [
-			{
-				"internalType": "address[]",
-				"name": "",
-				"type": "address[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getCharityRequests",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "requester",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "name",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "description",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "metadataUrl",
-						"type": "string"
-					},
-					{
-						"internalType": "bool",
-						"name": "approved",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct CharityDonation.CharityRequest[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "charity",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "campaignId",
-				"type": "uint256"
-			}
-		],
-		"name": "getDonationsToCampaign",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "donor",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "message",
-						"type": "string"
-					}
-				],
-				"internalType": "struct CharityDonation.Donation[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "getMyDonations",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "address",
-						"name": "donor",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "timestamp",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "message",
-						"type": "string"
-					}
-				],
-				"internalType": "struct CharityDonation.Donation[]",
-				"name": "",
-				"type": "tuple[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "minimumDonation",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "paused",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	}
-]; // Replace with full ABI from Remix or artifacts
-
-let web3;
-let contract;
-let currentAccount;
-
-function prefillDonation(charityAddr, campaignId) {
-  document.getElementById("charityAddress").value = charityAddr;
-  document.getElementById("campaignId").value = campaignId;
-  
-  // Scroll to the donation section
-  document.querySelector('section:nth-of-type(2)').scrollIntoView({ 
-    behavior: 'smooth' 
-  });
-}
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        }
+      ],
+      "name": "CampaignCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        }
+      ],
+      "name": "CharityApproved",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "requester",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "requestId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "name": "CharityRequested",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "name": "DonationMade",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Withdrawn",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "campaignsByCharity",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "goalAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalDonated",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "charities",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataUrl",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "charityList",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "charityRequests",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "requester",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataUrl",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "approved",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "donationsByDonor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "donationsToCampaign",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "minimumDonation",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataUrl",
+          "type": "string"
+        }
+      ],
+      "name": "requestCharityRegistration",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "requestId",
+          "type": "uint256"
+        }
+      ],
+      "name": "approveCharity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "metadataUrl",
+          "type": "string"
+        }
+      ],
+      "name": "updateCharityInfo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "toggleCharityStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "goalAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "durationInDays",
+          "type": "uint256"
+        }
+      ],
+      "name": "createCampaign",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        }
+      ],
+      "name": "toggleCampaignStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "name": "donateToCampaign",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawCampaignFunds",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pauseContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpauseContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMinimumDonation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCharities",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        }
+      ],
+      "name": "getCampaigns",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "goalAmount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalDonated",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isActive",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct CharityDonation.Campaign[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "charity",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "campaignId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDonationsToCampaign",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "donor",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct CharityDonation.Donation[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getMyDonations",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "donor",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "message",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct CharityDonation.Donation[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getCharityRequests",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "requester",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "metadataUrl",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "approved",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct CharityDonation.CharityRequest[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    }
+  ]; // Paste ABI from JSON artifact
 
 async function connectWallet() {
   if (window.ethereum) {
     web3 = new Web3(window.ethereum);
-    try {
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-      currentAccount = accounts[0];
-      document.getElementById("walletAddress").textContent = "Connected: " + currentAccount;
-      contract = new web3.eth.Contract(abi, contractAddress);
-    } catch (err) {
-      console.error("Connection error:", err);
-    }
-  } else {
-    alert("Please install MetaMask.");
+    await ethereum.request({ method: 'eth_requestAccounts' });
+    account = (await web3.eth.getAccounts())[0];
+    document.getElementById("wallet").innerText = `Connected: ${account}`;
+    contract = new web3.eth.Contract(abi, contractAddress);
   }
 }
 
-document.getElementById("connectBtn").addEventListener("click", connectWallet);
-
-async function submitCharityRequest() {
-  const name = document.getElementById("charityName").value;
-  const description = document.getElementById("charityDesc").value;
-  const metadata = document.getElementById("metadataUrl").value;
-
+async function requestCharityRegistration() {
   try {
-    await contract.methods.requestCharityRegistration(name, description, metadata)
-      .send({ from: currentAccount });
-    document.getElementById("charityStatus").textContent = "Request submitted!";
-  } catch (err) {
-    document.getElementById("charityStatus").textContent = "Error submitting request.";
-    console.error(err);
+    const name = document.getElementById("cName").value.trim();
+    const description = document.getElementById("cDesc").value.trim();
+    const metadataUrl = document.getElementById("cMeta").value.trim();
+
+    if (!name || !description || !metadataUrl) {
+      alert("Please fill in all fields.");
+      console.error("Validation failed: Missing input fields.");
+      return;
+    }
+
+    console.log("Inputs for charity registration:", { name, description, metadataUrl });
+
+    // Fetch contract state for validation
+    const charityState = await contract.methods.charities(account).call();
+    if (charityState.isActive) {
+      alert("You are already an approved charity.");
+      console.error("Validation failed: Already an approved charity.");
+      return;
+    }
+
+    const charityRequests = await contract.methods.getCharityRequests().call();
+    const hasPendingRequest = charityRequests.some(
+      (request) => request.requester.toLowerCase() === account.toLowerCase() && !request.approved
+    );
+
+    if (hasPendingRequest) {
+      alert("You already have a pending charity registration request.");
+      console.error("Validation failed: Pending charity registration request.");
+      return;
+    }
+
+    const gasEstimate = await contract.methods
+      .requestCharityRegistration(name, description, metadataUrl)
+      .estimateGas({ from: account });
+
+    console.log("Estimated gas:", gasEstimate);
+
+    await contract.methods
+      .requestCharityRegistration(name, description, metadataUrl)
+      .send({ from: account, gas: gasEstimate });
+
+    alert("Charity registration request submitted successfully!");
+  } catch (error) {
+    console.error("Failed to submit charity registration request:", error);
+    alert("Charity registration request failed. Please check the console for details.");
   }
+}
+
+async function loadCharityRequests() {
+  const requests = await contract.methods.getCharityRequests().call();
+  const container = document.getElementById("charity-requests");
+  container.innerHTML = "";
+  requests.forEach((r, i) => {
+    if (!r.approved) {
+      container.innerHTML += `<p>${r.name} - ${r.description}
+        <button onclick="approveCharity(${i})">Approve</button></p>`;
+    }
+  });
+}
+
+async function approveCharity(id) {
+  await contract.methods.approveCharity(id).send({ from: account });
+}
+
+async function pauseContract() {
+  await contract.methods.pauseContract().send({ from: account });
+}
+async function unpauseContract() {
+  await contract.methods.unpauseContract().send({ from: account });
+}
+async function setMinDonation() {
+  const val = web3.utils.toWei(minDonation.value, "ether");
+  await contract.methods.setMinimumDonation(val).send({ from: account });
+}
+
+async function createCampaign() {
+  const t = campTitle.value, d = campDesc.value;
+  const g = web3.utils.toWei(campGoal.value, "ether");
+  const dur = campDuration.value;
+  await contract.methods.createCampaign(t, d, g, dur).send({ from: account });
+}
+
+async function loadMyCampaigns() {
+  const camps = await contract.methods.getCampaigns(account).call();
+  const div = document.getElementById("my-campaigns");
+  div.innerHTML = "";
+  camps.forEach((c, i) => {
+    div.innerHTML += `<p>${c.title} | ${web3.utils.fromWei(c.totalDonated, 'ether')} ETH raised 
+      <button onclick="toggleCampaign(${i})">Toggle</button>
+      <button onclick="withdraw(${i})">Withdraw</button></p>`;
+  });
+}
+
+async function toggleCampaign(id) {
+  await contract.methods.toggleCampaignStatus(id).send({ from: account });
+}
+
+async function withdraw(id) {
+  await contract.methods.withdrawCampaignFunds(id).send({ from: account });
 }
 
 async function donate() {
-  const charity = document.getElementById("charityAddress").value; // Missing input field
-  const campaignId = document.getElementById("campaignId").value;
-  const amount = document.getElementById("donationAmount").value;
-  const message = document.getElementById("donationMessage").value;
-
-  try {
-    await contract.methods.donateToCampaign(charity, campaignId, message)
-      .send({ from: currentAccount, value: web3.utils.toWei(amount, "ether") });
-    document.getElementById("donationStatus").textContent = "Donation successful!";
-  } catch (err) {
-    document.getElementById("donationStatus").textContent = "Donation failed.";
-    console.error(err);
-  }
+  const to = donateTo.value;
+  const id = donateId.value;
+  const msg = donateMsg.value;
+  const value = web3.utils.toWei(donateAmt.value, "ether");
+  await contract.methods.donateToCampaign(to, id, msg).send({ from: account, value });
 }
 
-
-async function loadAllCampaigns() {
-  if (!contract) {
-    alert("Please connect your wallet first.");
-    return;
-  }
-
-  const container = document.getElementById("campaignsContainer");
-  container.innerHTML = "Loading...";
-
-  try {
-    const charityAddresses = await contract.methods.getCharities().call();
-    console.log("Charity Addresses:", charityAddresses);
-    container.innerHTML = "";
-
-    for (const charity of charityAddresses) {
-      const campaigns = await contract.methods.getCampaigns(charity).call();
-
-      if (campaigns.length === 0) continue;
-
-      const charityDiv = document.createElement("div");
-      charityDiv.innerHTML = `<h3>Charity: ${charity}</h3>`;
-
-      campaigns.forEach((campaign, index) => {
-        const deadlineDate = new Date(Number(campaign.deadline) * 1000).toLocaleDateString();
-
-        const card = `
-            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-            <p><strong>Campaign ID:</strong> ${index}</p>
-            <p><strong>Title:</strong> ${campaign.title}</p>
-            <p><strong>Description:</strong> ${campaign.description}</p>
-            <p><strong>Goal:</strong> ${web3.utils.fromWei(campaign.goalAmount, "ether")} ETH</p>
-            <p><strong>Raised:</strong> ${web3.utils.fromWei(campaign.totalDonated, "ether")} ETH</p>
-            <p><strong>Deadline:</strong> ${deadlineDate}</p>
-            <p><strong>Active:</strong> ${campaign.isActive ? "Yes" : "No"}</p>
-            <button onclick="prefillDonation('${charity}', ${index})">Donate to this campaign</button>
-            </div>
-        `;
-        charityDiv.innerHTML += card;
-        });
-
-      container.appendChild(charityDiv);
-    }
-
-    if (container.innerHTML === "") {
-      container.innerHTML = "No campaigns found.";
-    }
-  } catch (err) {
-    console.error("Error loading campaigns:", err);
-    container.innerHTML = "Failed to load campaigns.";
-  }
+async function getMyDonations() {
+  const dons = await contract.methods.getMyDonations().call({ from: account });
+  const div = document.getElementById("my-donations");
+  div.innerHTML = "";
+  dons.forEach(d => {
+    div.innerHTML += `<p>${web3.utils.fromWei(d.amount)} ETH | ${d.message}</p>`;
+  });
 }
-

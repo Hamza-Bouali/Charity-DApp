@@ -8,7 +8,7 @@ Charity DApp is a decentralized application that allows users to create, manage,
 
 ## Demo Video
 
-[Watch the demo video](assets/demo-video.mp4)
+[Watch the demo video](demo-video.webm)
 
 
 ## Features

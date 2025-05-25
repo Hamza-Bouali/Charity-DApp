@@ -4,7 +4,7 @@ Charity DApp is a decentralized application that allows users to create, manage,
 
 ## Collaborators
    - [Hamza Bouali](https://github.com/Hamza-Bouali)
-   - [Mouad Ghalmi](viole089)
+   - [Mouad Ghalmi](https://github.com/Viole089)
 
 ## Demo Video
 

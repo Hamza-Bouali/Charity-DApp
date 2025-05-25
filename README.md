@@ -2,6 +2,15 @@
 
 Charity DApp is a decentralized application that allows users to create, manage, and donate to charitable campaigns. It leverages blockchain technology to ensure transparency and trust in the donation process.
 
+## Collaborators
+   - [Hamza Bouali](https://github.com/Hamza-Bouali)
+   - [Mouad Ghalmi](viole089)
+
+## Demo Video
+
+[Watch the demo video](assets/demo-video.mp4)
+
+
 ## Features
 
 - **Campaign Management**: Registered charities can create and manage campaigns.
